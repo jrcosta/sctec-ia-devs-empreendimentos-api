@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: sctec_db
+    environment:
+      POSTGRES_USER: sctec_user
+      POSTGRES_PASSWORD: sctec_password
+      POSTGRES_DB: sctec_empreendimentos
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      
+  api:
+    build: .
+    container_name: sctec_api
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=jdbc:postgresql://db:5432/sctec_empreendimentos
+      - DB_USERNAME=sctec_user
+      - DB_PASSWORD=sctec_password
+      - DB_DRIVER=org.postgresql.Driver
+      - DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
