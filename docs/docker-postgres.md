@@ -73,6 +73,7 @@ docker compose down -v
 Como o *Seed* injeta 3 empreendimentos assim que o banco de dados liga na arquitetura, você não precisa fazer nenhum POST manual ou usar ferramentas pesadas como Insomnia para checar se a API está de pé e conectada ao Postgres com sucesso.
 
 Basta abrir o seu navegador preferido (Chrome, Edge, Firefox) e acessar (ou clicar) nesta URL:
-```👉 **[http://localhost:8080/api/v1/empreendimentos](http://localhost:8080/api/v1/empreendimentos)**```
+
+👉 **[http://localhost:8080/api/v1/empreendimentos](http://localhost:8080/api/v1/empreendimentos)**
 
 A API responderá com os dados em JSON limpo listando todos os empreendimentos paginados recém-criados.
