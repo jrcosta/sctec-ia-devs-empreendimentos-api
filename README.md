@@ -45,7 +45,7 @@ Para executar o sistema na sua máquina, siga os passos abaixo:
 ### Inicialização
 1. Abra o terminal onde quer hospedar os arquivos e efetue o clone oficial do repositório remoto:
    ```bash
-   git clone https://github.com/SeuUsuario/sctec-ia-devs-empreendimentos-api.git
+   git clone https://github.com/jrcosta/sctec-ia-devs-empreendimentos-api.git
    cd sctec-ia-devs-empreendimentos-api
    ```
 2. Instale as bibliotecas base, resolva os _plugins_ e gere o empacotamento (`.jar`):
