@@ -37,18 +37,14 @@ A diretiva `${VAR:DEFAULT}` informa ao Spring:
 - **No Docker**: Injetaremos as URL e Senhas reais do PostgreSQL criadas no "services" do Compose via variáveis de ambiente. A aplicação usa e modela as tabelas no Postgres, descartando o H2.
 - **No PC do Dev**: Como não há docker rodando, o Spring lê o `DEFAULT` contido depois do dois-pontos e injeta sozinho novamente o H2 Database na memória RAM de desenvolvimento contínua. Sem estresses.
 
-## 4. Database Seeding
+## 4. Flyway Migrations e Seeding
 
-Configuramos o preenchimento de teste de tabelas vazio com entidades palpáveis para testes no Swagger via `src/main/resources/data.sql`:
+Abandonamos a perigosa propriedade geradora nativa do Hibernate (`ddl-auto=update`) e o script solto de `data.sql`. A arquitetura atual usufrui de **Migrations Formais** orquestradas pelo **Flyway**, provendo versionamento profissional na pasta `src/main/resources/db/migration/`:
 
-```sql
-INSERT INTO empreendimentos (nome_empreendimento, nome_empreendedor, municipioSC, segmento, contato, status, data_cadastro) VALUES 
-('Innova SC', 'Maria Souza', 'Florianópolis', 'TECNOLOGIA', '(48) 99999-1111', 'ATIVO', CURRENT_TIMESTAMP),
-('AgroSC Global', 'José Alves', 'Chapecó', 'AGRONEGOCIO', '(49) 98888-2222', 'ATIVO', CURRENT_TIMESTAMP),
-('Sul Textil', 'Ana Clara', 'Blumenau', 'INDUSTRIA', '(47) 97777-3333', 'INATIVO', CURRENT_TIMESTAMP);
-```
+1. `V1__create_table_empreendimentos.sql`: Prepara e constrói a tabela com as primárias, índices e campos pre-definidos no banco Postgres ou H2 em caso de ramificação local.
+2. `V2__insert_seed_empreendimentos.sql`: Executado após a criação, preenche imediatamente as linhas das tabelas com 3 registros fantasiados propícios para debug rápido na UI.
 
-> **Atenção**: Esta estratégia preenche dados assim que a aplicação sobe independente se no Docker (Postgres) ou na máquina (H2) graças à nova bandeira `spring.sql.init.mode=always`. 
+> **Atenção**: Esta estratégia de V1 e V2 executa infalível independente do repositório final de banco de dados e impede sobrescritas de metadados em re-starts frequentes. 
 
 ## 5. Como Executar?
 
