@@ -8,4 +8,6 @@ Dependências implementadas:
 - Enum `Status` (ATIVO/INATIVO).
 - Interface `EmpreendimentoRepository` extendendo do framework padrão Data JPA.
 
+**Nota (Refatoração)**: O projeto agora inclui a biblioteca **Lombok** declarada no `pom.xml`. Códigos repetitivos (`Getters`, `Setters`, `Constructors`) da `Empreendimento.java` (e futuras entidades/DTOs) foram delegados às anotações `@Data`, `@NoArgsConstructor` e `@AllArgsConstructor`. Os arquivos `README.md` e `AGENTS.md` foram atualizados refletindo as novas regras técnicas e documentacionais.
+
 **Relaciona a:** Etapa 3 do Desafio IA para Devs (SCTEC).

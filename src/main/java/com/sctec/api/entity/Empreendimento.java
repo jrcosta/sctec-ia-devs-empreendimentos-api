@@ -3,10 +3,16 @@ package com.sctec.api.entity;
 import com.sctec.api.enums.Segmento;
 import com.sctec.api.enums.Status;
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "empreendimentos")
 public class Empreendimento {
 
@@ -48,79 +54,5 @@ public class Empreendimento {
     @PreUpdate
     protected void onUpdate() {
         this.dataAtualizacao = LocalDateTime.now();
-    }
-
-    // Getters e Setters
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNomeEmpreendimento() {
-        return nomeEmpreendimento;
-    }
-
-    public void setNomeEmpreendimento(String nomeEmpreendimento) {
-        this.nomeEmpreendimento = nomeEmpreendimento;
-    }
-
-    public String getNomeEmpreendedor() {
-        return nomeEmpreendedor;
-    }
-
-    public void setNomeEmpreendedor(String nomeEmpreendedor) {
-        this.nomeEmpreendedor = nomeEmpreendedor;
-    }
-
-    public String getMunicipioSC() {
-        return municipioSC;
-    }
-
-    public void setMunicipioSC(String municipioSC) {
-        this.municipioSC = municipioSC;
-    }
-
-    public Segmento getSegmento() {
-        return segmento;
-    }
-
-    public void setSegmento(Segmento segmento) {
-        this.segmento = segmento;
-    }
-
-    public String getContato() {
-        return contato;
-    }
-
-    public void setContato(String contato) {
-        this.contato = contato;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getDataCadastro() {
-        return dataCadastro;
-    }
-
-    public void setDataCadastro(LocalDateTime dataCadastro) {
-        this.dataCadastro = dataCadastro;
-    }
-
-    public LocalDateTime getDataAtualizacao() {
-        return dataAtualizacao;
-    }
-
-    public void setDataAtualizacao(LocalDateTime dataAtualizacao) {
-        this.dataAtualizacao = dataAtualizacao;
     }
 }
