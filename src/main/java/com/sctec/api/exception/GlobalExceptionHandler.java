@@ -6,7 +6,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.data.mapping.PropertyReferenceException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -41,17 +40,6 @@ public class GlobalExceptionHandler {
         body.put("error", "Bad Request");
         body.put("message", "Validation Failed");
         body.put("details", errors);
-
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(PropertyReferenceException.class)
-    public ResponseEntity<Map<String, Object>> handlePropertyReferenceException(PropertyReferenceException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", "Propriedade de ordenação inválida: " + ex.getPropertyName());
 
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
