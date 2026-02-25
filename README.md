@@ -57,10 +57,14 @@ Para executar o sistema na sua máquina, siga os passos abaixo:
    ```bash
    ./mvnw spring-boot:run
    ```
-4. O servidor iniciará. A API responderá por default na porta 8080 (http://localhost:8080).
-5. Como boa prática opcional, acesse a documentação dinâmica visual em seu navegador web (ex: `http://localhost:8080/swagger-ui.html`).
+5. O servidor iniciará. A API responderá por default na porta 8080 (http://localhost:8080).
 
+### 📖 Documentação da API (Swagger / OpenAPI)
+  
+O projeto conta com documentação interativa gerada automaticamente. Com a aplicação rodando, acesse os links formatados no Spring Boot através do navegador:
 
+- **Swagger UI (Interface Gráfica e Testes):** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **OpenAPI Docs (JSON Schema Nativo):** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
 ## 🌐 Exemplos de Endpoints
 
 ### 1️⃣ Criar um Novo Empreendimento
