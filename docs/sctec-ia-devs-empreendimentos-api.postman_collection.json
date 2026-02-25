@@ -1,0 +1,137 @@
+{
+    "info": {
+        "name": "SCTEC Empreendimentos API",
+        "description": "Coleção de requisições preparadas para testes manuais no endpoint de Empreendimentos.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Criar Empreendimento",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"nomeEmpreendimento\": \"Empresa Inovadora\",\n  \"nomeEmpreendedor\": \"João da Silva\",\n  \"municipioSC\": \"Florianópolis\",\n  \"segmento\": \"TECNOLOGIA\",\n  \"contato\": \"joao@empresa.com\",\n  \"status\": \"ATIVO\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/empreendimentos",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "empreendimentos"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Listar Empreendimentos (Paginado)",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/empreendimentos?page=0&size=10",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "empreendimentos"
+                    ],
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "0"
+                        },
+                        {
+                            "key": "size",
+                            "value": "10"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Buscar Empreendimento por ID",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/empreendimentos/1",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "empreendimentos",
+                        "1"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Atualizar Empreendimento",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"nomeEmpreendimento\": \"Empresa Inovadora Atualizada\",\n  \"nomeEmpreendedor\": \"João da Silva Sauro\",\n  \"municipioSC\": \"Joinville\",\n  \"segmento\": \"SERVICOS\",\n  \"contato\": \"joao2@empresa.com\",\n  \"status\": \"INATIVO\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/empreendimentos/1",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "empreendimentos",
+                        "1"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Deletar Empreendimento",
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/empreendimentos/1",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "empreendimentos",
+                        "1"
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        }
+    ]
+}
