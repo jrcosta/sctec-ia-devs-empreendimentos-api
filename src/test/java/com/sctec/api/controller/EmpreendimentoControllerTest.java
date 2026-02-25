@@ -15,7 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(EmpreendimentoController.class)
+@SuppressWarnings("null")
 class EmpreendimentoControllerTest {
 
     @Autowired
@@ -120,7 +121,7 @@ class EmpreendimentoControllerTest {
     @Test
     void findAll_ShouldReturnOk() throws Exception {
         Page<EmpreendimentoResponseDTO> page = new PageImpl<>(List.of(responseDTO));
-        when(service.findAll(any(PageRequest.class))).thenReturn(page);
+        when(service.findAll(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/empreendimentos")
                 .param("page", "0")
@@ -128,7 +129,7 @@ class EmpreendimentoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(1L));
 
-        verify(service, times(1)).findAll(any(PageRequest.class));
+        verify(service, times(1)).findAll(any(Pageable.class));
     }
 
     @Test

@@ -7,8 +7,11 @@ import com.sctec.api.exception.ResourceNotFoundException;
 import com.sctec.api.repository.EmpreendimentoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 @Service
 public class EmpreendimentoServiceImpl implements EmpreendimentoService {
@@ -24,20 +27,20 @@ public class EmpreendimentoServiceImpl implements EmpreendimentoService {
     public EmpreendimentoResponseDTO create(EmpreendimentoRequestDTO requestDTO) {
         Empreendimento entity = new Empreendimento();
         copyDtoToEntity(requestDTO, entity);
-        entity = repository.save(entity);
-        return new EmpreendimentoResponseDTO(entity);
+        Empreendimento savedEntity = repository.save(entity);
+        return new EmpreendimentoResponseDTO(savedEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<EmpreendimentoResponseDTO> findAll(Pageable pageable) {
+    public Page<EmpreendimentoResponseDTO> findAll(@NonNull Pageable pageable) {
         Page<Empreendimento> page = repository.findAll(pageable);
         return page.map(EmpreendimentoResponseDTO::new);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public EmpreendimentoResponseDTO findById(Long id) {
+    public EmpreendimentoResponseDTO findById(@NonNull Long id) {
         Empreendimento entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Empreendimento não encontrado para o id " + id));
         return new EmpreendimentoResponseDTO(entity);
@@ -45,17 +48,17 @@ public class EmpreendimentoServiceImpl implements EmpreendimentoService {
 
     @Override
     @Transactional
-    public EmpreendimentoResponseDTO update(Long id, EmpreendimentoRequestDTO requestDTO) {
+    public EmpreendimentoResponseDTO update(@NonNull Long id, EmpreendimentoRequestDTO requestDTO) {
         Empreendimento entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Empreendimento não encontrado para o id " + id));
         copyDtoToEntity(requestDTO, entity);
-        entity = repository.save(entity);
-        return new EmpreendimentoResponseDTO(entity);
+        Empreendimento savedEntity = repository.save(Objects.requireNonNull(entity));
+        return new EmpreendimentoResponseDTO(savedEntity);
     }
 
     @Override
     @Transactional
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Empreendimento não encontrado para o id " + id);
         }

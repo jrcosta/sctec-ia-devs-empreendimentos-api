@@ -6,10 +6,10 @@ import com.sctec.api.service.EmpreendimentoService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.lang.NonNull;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -28,14 +28,14 @@ public class EmpreendimentoController {
 
     @GetMapping
     @Operation(summary = "Listar todos os empreendimentos", description = "Retorna uma lista paginada de todos os empreendimentos cadastrados")
-    public ResponseEntity<Page<EmpreendimentoResponseDTO>> findAll(Pageable pageable) {
+    public ResponseEntity<Page<EmpreendimentoResponseDTO>> findAll(@NonNull Pageable pageable) {
         Page<EmpreendimentoResponseDTO> page = service.findAll(pageable);
         return ResponseEntity.ok(page);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar empreendimento pelo ID", description = "Pesquisa e devolve as informações de um único empreendimento passando seu ID de registro.")
-    public ResponseEntity<EmpreendimentoResponseDTO> findById(@PathVariable Long id) {
+    public ResponseEntity<EmpreendimentoResponseDTO> findById(@PathVariable @NonNull Long id) {
         EmpreendimentoResponseDTO dto = service.findById(id);
         return ResponseEntity.ok(dto);
     }
@@ -51,7 +51,7 @@ public class EmpreendimentoController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar as informações", description = "Permite alterar os dados de um empreendimento já criado (ex: inativar no status).")
-    public ResponseEntity<EmpreendimentoResponseDTO> update(@PathVariable Long id,
+    public ResponseEntity<EmpreendimentoResponseDTO> update(@PathVariable @NonNull Long id,
             @Valid @RequestBody EmpreendimentoRequestDTO requestDTO) {
         EmpreendimentoResponseDTO dto = service.update(id, requestDTO);
         return ResponseEntity.ok(dto);
@@ -59,7 +59,7 @@ public class EmpreendimentoController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Excluir um empreendimento", description = "Deleta fisicamente um registro do sistema após verificar sua existência.")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable @NonNull Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
