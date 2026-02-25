@@ -16,6 +16,7 @@ A solução backend desenvolvida explora o poder de bibliotecas consolidadas e m
 - **Spring Data JPA**: Abstração sobre a persistência dos dados que reduz significativamente o código de repetição e unifica o uso com o Hibernate.
 - **Spring Validation (Hibernate Validator)**: Aplicação simples das regras de validação sobre o payload antes que ele chegue ao processamento da regra de negócio.
 - **Banco de Dados (H2 / PostgreSQL)**: O banco utilizado foi estrategicamente estruturado. Durante o desenvolvimento e em perfis de teste, o "In-Memory" (H2) agiliza as validações.
+- **Lombok**: Biblioteca utilitária incorporada para reduzir a verbosidade de modelagens, eliminando Getters, Setters e Construtores manuais.
 - **JUnit 5**: Para testes funcionais da camada REST.
 - **Swagger / OpenAPI**: Ferramenta acoplada ao framework capaz de gerar a visualização das rotas, retornos e tipos expostos da aplicação.
 
