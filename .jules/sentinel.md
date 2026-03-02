@@ -1,0 +1,4 @@
+## 2023-10-27 - [Application level constraint validation matching Database limits]
+**Vulnerability:** Input fields lacking length validation on DTOs mismatch the actual table schemas. When a string larger than expected is inserted, the DB engine throws a `DataIntegrityViolationException`.
+**Learning:** This leads to an unhandled exception at runtime and causes the application to respond with a 500 Internal Server error possibly logging sensitive implementations if stack traces are exposed. Furthermore, it causes database DoS as large payloads reach the DB before failing.
+**Prevention:** We should always define length rules `@Size` directly within Request DTO objects. So that `GlobalExceptionHandler` and `MethodArgumentNotValidException` can handle the constraint correctly returning a well-formatted 400 Bad Request error.
