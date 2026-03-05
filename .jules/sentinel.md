@@ -1,0 +1,4 @@
+## 2024-05-24 - Missing DTO Size Validation Exposing Unhandled Exceptions
+**Vulnerability:** Input fields in the `EmpreendimentoRequestDTO` DTO were missing length validation (`@Size`) matching the underlying database constraints. If an overly long string is submitted, an internal `DataIntegrityViolationException` is thrown instead of a handled bad request constraint violation, potentially leaking internal architecture stack traces or causing denial of service.
+**Learning:** Spring Boot validation (Hibernate Validator) needs to explicitly reflect database-level constraints at the DTO level to guarantee proper request sanitation and correct error handling responses (400 Bad Request vs 500 Internal Server Error).
+**Prevention:** Always enforce `@Size` constraints on String fields in request DTOs reflecting their underlying database column schema lengths.
