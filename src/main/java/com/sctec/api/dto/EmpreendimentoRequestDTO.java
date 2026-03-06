@@ -4,6 +4,7 @@ import com.sctec.api.enums.Segmento;
 import com.sctec.api.enums.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
