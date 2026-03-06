@@ -1,3 +1,10 @@
+## 2026-03-04 - Missing Database Length Validation
+
+**Vulnerability:** The `EmpreendimentoRequestDTO` lacked `@Size` validation limits, allowing arbitrary length strings.
+
+**Learning:** This exposes the application to `DataIntegrityViolationException` when strings longer than the database schema limits (100 characters for names, 50 for contato) are submitted. This can also lead to Denial of Service (DoS) attacks via overly large payloads and ungraceful error handling. Additionally, the application failed to start due to `spring.jpa.hibernate.ddl-auto=validate` detecting a missing `data_atualizacao` column in the database, which was defined in the `Empreendimento` entity but not in the initial Flyway migration scripts.
+
+**Prevention:** Always ensure DTO validation rules strictly match or are stricter than the underlying database schema constraints. For example, use `@Size(max = 100)` on fields defined as `VARCHAR(100)`. When adding new entity fields, always create corresponding Flyway migration scripts to ensure the schema matches the entity definition.
 ## 2024-05-24 - Application-level input size defense in DTOs
 **Vulnerability:** The `EmpreendimentoRequestDTO` was missing input length validation, which could allow maliciously crafted oversized strings to be submitted. This bypassed early validation and led to database-level `DataIntegrityViolationException` or internal 500 errors when attempting to insert data that exceeded schema limits (e.g., `VARCHAR(100)`).
 **Learning:** Security boundaries must exist at the earliest possible entry point (the controller layer) rather than relying solely on the database schema to enforce constraints. By mapping database limits to application-level `@Size` validations, we prevent unnecessary database load, avoid exposing internal SQL exceptions, and gracefully handle oversized payloads as `400 Bad Request` instead of `500 Internal Server Error`.
