@@ -53,3 +53,8 @@ Additionally, strict schema validation (`ddl-auto=validate`) in Spring Boot can 
 **Vulnerability:** Input fields in `EmpreendimentoRequestDTO` lacked length validation (`@Size`), allowing arbitrary length strings to be passed to the service layer. This caused `DataIntegrityViolationException` at the database level when persisting entities, resulting in 500 Internal Server Errors instead of 400 Bad Requests.
 **Learning:** JPA `@Column(length=X)` annotations only enforce schema constraints but do not perform pre-persistence validation in the application layer unless Hibernate Validator is explicitly invoked or the DTO mirrors these constraints.
 **Prevention:** Always mirror database constraints (length, nullability) in DTOs using Jakarta Validation annotations (`@Size`, `@NotNull`) to fail fast and securely at the controller level.
+
+## 2023-10-27 - [Missing Security Headers]
+**Vulnerability:** The application is missing essential security headers (like X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, and Strict-Transport-Security), exposing it to clickjacking, XSS, and MIME-sniffing attacks.
+**Learning:** Security headers are not automatically applied by Spring Boot unless Spring Security is included and configured.
+**Prevention:** Implement a standard servlet Filter that injects essential security headers into every HTTP response if a full Spring Security setup is not warranted.
