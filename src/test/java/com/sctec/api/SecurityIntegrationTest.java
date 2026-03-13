@@ -11,7 +11,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -42,5 +44,16 @@ class SecurityIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testSecurityHeadersPresent() throws Exception {
+        mockMvc.perform(get("/api/v1/empreendimentos"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("X-XSS-Protection", "1; mode=block"))
+                .andExpect(header().string("Strict-Transport-Security", "max-age=31536000; includeSubDomains"))
+                .andExpect(header().string("Content-Security-Policy", "default-src 'self'"));
     }
 }
