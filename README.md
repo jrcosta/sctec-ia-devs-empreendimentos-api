@@ -1,99 +1,370 @@
-# SCTEC - Gerenciamento de Empreendimentos (Desafio OpenAI para DEVs)
+# SCTEC - API de Gerenciamento de Empreendimentos
+
+> Desafio **IA para DEVs** — SCTEC / LAB365
 
 ## 📌 Descrição do Projeto
 
-Este projeto consiste em uma API RESTful desenvolvida para gerenciar os dados de **empreendimentos no estado de Santa Catarina**. O propósito fundamental do sistema é disponibilizar operações completas de CRUD (Create, Read, Update, Delete) que possibilitem o cadastro, edição, exclusão e visualização de organizações e negócios espalhados pela região catarinense.
+API RESTful para gerenciar dados de **empreendimentos no estado de Santa Catarina**, oferecendo operações completas de CRUD (Create, Read, Update, Delete) sobre os cadastros de organizações e negócios da região catarinense.
 
-A construção deste serviço seguiu de forma estrita e direta as premissas, regras e avaliações requeridas no desafio da SCTEC (IA para DEVs). A arquitetura implementada reflete a adoção das melhores práticas conhecidas na stack Java + Spring Boot, objetivando manutenibilidade, agilidade e escalabilidade da aplicação. O projeto inclui separação em camadas (Controller, Service, Repository) e está instrumentado com validações de dados e tratamento adequado das requisições HTTP e de exceções de domínio.
+A arquitetura segue o padrão de camadas (Controller → Service → Repository) com validações de dados via Bean Validation, tratamento centralizado de exceções, migrações de banco gerenciadas pelo Flyway e documentação interativa via Swagger/OpenAPI.
+
+---
 
 ## 🚀 Tecnologias Utilizadas
 
-A solução backend desenvolvida explora o poder de bibliotecas consolidadas e modernas do ecossistema Java, descritas abaixo:
+| Tecnologia | Versão / Detalhes |
+|---|---|
+| **Java** | 17 (LTS) |
+| **Spring Boot** | 3.3.3 |
+| **Spring Web** | REST Controllers com anotações `@RestController`, `@GetMapping`, etc. |
+| **Spring Data JPA** | Abstração de persistência sobre Hibernate |
+| **Spring Validation** | Bean Validation (Hibernate Validator) nos DTOs |
+| **Flyway** | Migrações versionadas de banco de dados (DDL + Seed) |
+| **PostgreSQL** | 15 (via Docker) — banco de produção |
+| **H2 Database** | In-memory — fallback para desenvolvimento local/testes |
+| **Lombok** | Redução de boilerplate (`@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`) |
+| **Springdoc OpenAPI** | 2.6.0 — Swagger UI para documentação interativa |
+| **JUnit 5 + Mockito** | Testes unitários de Controller (`@WebMvcTest`) e Service |
+| **Docker** | Dockerfile multi-stage + Docker Compose |
+| **Maven** | Gerenciamento de dependências (wrapper `mvnw` incluído) |
 
-- **Java 17+**: A versão Long-Term Support (LTS) utilizada como base sólida, robusta e escalável da aplicação.
-- **Spring Boot 3.x**: O framework nuclear que gerencia desde a autoconfiguração do servidor à facilidade na injeção de dependências.
-- **Spring Web**: Permite o mapeamento veloz e simplificado de endpoints REST através das de anotações focadas (`@RestController`, `@GetMapping`, etc).
-- **Spring Data JPA**: Abstração sobre a persistência dos dados que reduz significativamente o código de repetição e unifica o uso com o Hibernate.
-- **Spring Validation (Hibernate Validator)**: Aplicação simples das regras de validação sobre o payload antes que ele chegue ao processamento da regra de negócio.
-- **Banco de Dados (H2 / PostgreSQL)**: O banco utilizado foi estrategicamente estruturado. Durante o desenvolvimento e em perfis de teste, o "In-Memory" (H2) agiliza as validações.
-- **Lombok**: Biblioteca utilitária incorporada para reduzir a verbosidade de modelagens, eliminando Getters, Setters e Construtores manuais.
-- **JUnit 5**: Para testes funcionais da camada REST.
-- **Swagger / OpenAPI**: Ferramenta acoplada ao framework capaz de gerar a visualização das rotas, retornos e tipos expostos da aplicação.
+---
 
 ## 📂 Estrutura do Projeto
 
-A organização de diretórios seguiu a convenção de "layers" do mundo corporativo Java:
-
 ```text
-src/main/java/com/sctec/api/.../empreendimentos/
-├── controller/    # Configuração e definição dos endpoints que ouvem requisições HTTP
-├── dto/           # Pattern de Transferência de Dados; encapsula a payload para entrada e saída 
-├── entity/        # Modelagem do objeto de persistência Mapeado via JPA
-├── repository/    # Interface que opera o banco para as queries customizadas e crud methods
-├── service/       # Local responsável por injetar repositórios e ditar as especificações de negócio (Domain Rules)
-└── exception/     # Ponto central para classes de erro customizadas, e o `GlobalExceptionHandler` manipulando falhas 
+sctec-ia-devs-empreendimentos-api/
+├── Dockerfile                         # Build multi-stage (JDK → JRE Alpine)
+├── docker-compose.yml                 # Orquestração: PostgreSQL 15 + API
+├── pom.xml                            # Dependências Maven
+├── docs/                              # Documentação complementar
+│   ├── diretrizes-agentes-ia/         # Regras e plano do desafio SCTEC
+│   ├── docker-postgres.md             # Detalhes da containerização
+│   ├── guia-uso-postman.md            # Guia de importação e uso do Postman
+│   └── *.postman_collection.json      # Coleção Postman exportada (5 requests)
+└── src/
+    ├── main/
+    │   ├── java/com/sctec/api/
+    │   │   ├── ApiApplication.java         # Classe principal (@SpringBootApplication)
+    │   │   ├── controller/
+    │   │   │   └── EmpreendimentoController.java   # 5 endpoints REST
+    │   │   ├── dto/
+    │   │   │   ├── EmpreendimentoRequestDTO.java    # DTO de entrada (com validações)
+    │   │   │   └── EmpreendimentoResponseDTO.java   # DTO de saída
+    │   │   ├── entity/
+    │   │   │   └── Empreendimento.java              # Entidade JPA mapeada
+    │   │   ├── enums/
+    │   │   │   ├── Segmento.java    # TECNOLOGIA, COMERCIO, INDUSTRIA, SERVICOS, AGRONEGOCIO
+    │   │   │   └── Status.java      # ATIVO, INATIVO
+    │   │   ├── exception/
+    │   │   │   ├── GlobalExceptionHandler.java      # @RestControllerAdvice (404 + 400)
+    │   │   │   └── ResourceNotFoundException.java   # Exceção customizada
+    │   │   ├── repository/
+    │   │   │   └── EmpreendimentoRepository.java    # JpaRepository<Empreendimento, Long>
+    │   │   └── service/
+    │   │       ├── EmpreendimentoService.java        # Interface do serviço
+    │   │       └── EmpreendimentoServiceImpl.java    # Implementação com @Transactional
+    │   └── resources/
+    │       ├── application.properties               # Config flexível (H2 ↔ PostgreSQL)
+    │       └── db/migration/
+    │           ├── V1__create_table_empreendimentos.sql   # DDL da tabela
+    │           └── V2__insert_seed_empreendimentos.sql    # 3 registros iniciais
+    └── test/java/com/sctec/api/
+        ├── ApiApplicationTests.java
+        ├── controller/
+        │   └── EmpreendimentoControllerTest.java    # 7 testes (MockMvc)
+        └── service/
+            └── EmpreendimentoServiceImplTest.java   # 7 testes (Mockito)
 ```
 
-## ⚙️ Como Rodar a Aplicação
+---
 
-Para executar o sistema na sua máquina, siga os passos abaixo:
+## 🐳 Executando via Docker Compose (Recomendado)
+
+A forma mais rápida e prática de subir toda a aplicação — **sem precisar instalar Java, Maven ou PostgreSQL** na sua máquina.
 
 ### Pré-requisitos
-* Java JDK 17 (ou superior) instalado e listado no `JAVA_HOME`.
-* Ferramenta **Maven** na máquina (opcional, uma vez que o wrapper `mvnw` virá acoplado na estrutura base do projeto).
-* Editor de sua preferência (IntelliJ, VS Code, Eclipse).
+
+- **Docker** e **Docker Compose** instalados e em execução.
+
+### Passo a Passo
+
+**1. Clone o repositório:**
+
+```bash
+git clone https://github.com/jrcosta/sctec-ia-devs-empreendimentos-api.git
+cd sctec-ia-devs-empreendimentos-api
+```
+
+**2. Suba os containers (build + execução):**
+
+```bash
+docker compose up --build -d
+```
+
+Este comando irá:
+- Construir a imagem da API via Dockerfile multi-stage (compilação Maven + empacotamento `.jar`)
+- Subir o banco **PostgreSQL 15** (Alpine) com volume persistente
+- Iniciar a **API Spring Boot** conectada ao PostgreSQL
+- Executar as migrações Flyway automaticamente (criação da tabela + seed de dados)
+
+**3. Verifique se está funcionando:**
+
+```bash
+# Logs da API em tempo real
+docker compose logs -f api
+
+# Teste rápido no navegador ou terminal
+curl http://localhost:8080/api/v1/empreendimentos
+```
+
+A API responderá com os 3 empreendimentos pré-cadastrados pelo seed.
+
+**4. Acesse a documentação interativa (Swagger):**
+
+Abra no navegador: **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)**
+
+**5. Para parar e limpar:**
+
+```bash
+# Parar os containers (preserva dados do banco)
+docker compose stop
+
+# Parar e remover containers + volumes (limpa tudo)
+docker compose down -v
+```
+
+### Variáveis de Ambiente (docker-compose.yml)
+
+| Variável | Valor Padrão | Descrição |
+|---|---|---|
+| `POSTGRES_USER` | `sctec_user` | Usuário do banco PostgreSQL |
+| `POSTGRES_PASSWORD` | `sctec_password` | Senha do banco PostgreSQL |
+| `POSTGRES_DB` | `sctec_empreendimentos` | Nome do banco de dados |
+| `DB_URL` | `jdbc:postgresql://db:5432/sctec_empreendimentos` | JDBC URL usada pela API |
+| `DB_USERNAME` | `sctec_user` | Usuário de conexão JPA |
+| `DB_PASSWORD` | `sctec_password` | Senha de conexão JPA |
+| `DB_DRIVER` | `org.postgresql.Driver` | Driver JDBC |
+| `DB_DIALECT` | `org.hibernate.dialect.PostgreSQLDialect` | Dialeto Hibernate |
+
+### Arquitetura dos Containers
+
+```text
+┌──────────────────────────────────────────────────────┐
+│                  docker compose                      │
+│                                                      │
+│  ┌──────────────────┐     ┌────────────────────────┐ │
+│  │    sctec_api      │     │      sctec_db          │ │
+│  │  Spring Boot 3    │────▶│   PostgreSQL 15        │ │
+│  │  Java 17 (JRE)   │     │   Alpine               │ │
+│  │  Porta: 8080      │     │   Porta: 5432          │ │
+│  └──────────────────┘     └────────────────────────┘ │
+│         │                        │                    │
+│         ▼                        ▼                    │
+│   localhost:8080            pgdata (volume)           │
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
+## ⚙️ Executando Localmente (Sem Docker)
+
+Para executar o sistema diretamente na máquina, **sem Docker**.
+
+### Pré-requisitos
+
+- **Java JDK 17** (ou superior) instalado e configurado no `JAVA_HOME`.
+- **Maven** (opcional — o wrapper `mvnw` está incluído no projeto).
 
 ### Inicialização
-1. Abra o terminal onde quer hospedar os arquivos e efetue o clone oficial do repositório remoto:
-   ```bash
-   git clone https://github.com/jrcosta/sctec-ia-devs-empreendimentos-api.git
-   cd sctec-ia-devs-empreendimentos-api
-   ```
-2. Instale as bibliotecas base, resolva os _plugins_ e gere o empacotamento (`.jar`):
-   ```bash
-   ./mvnw clean install
-   ```
-3. Suba o servidor Spring:
-   ```bash
-   ./mvnw spring-boot:run
-   ```
-5. O servidor iniciará. A API responderá por default na porta 8080 (http://localhost:8080).
 
-### 📖 Documentação da API (Swagger / OpenAPI)
-  
-O projeto conta com documentação interativa gerada automaticamente. Com a aplicação rodando, acesse os links formatados no Spring Boot através do navegador:
+```bash
+# 1. Clone o repositório
+git clone https://github.com/jrcosta/sctec-ia-devs-empreendimentos-api.git
+cd sctec-ia-devs-empreendimentos-api
 
-- **Swagger UI (Interface Gráfica e Testes):** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-- **OpenAPI Docs (JSON Schema Nativo):** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
-## 🌐 Exemplos de Endpoints
+# 2. Instale as dependências e gere o pacote (.jar)
+./mvnw clean install
 
-### 1️⃣ Criar um Novo Empreendimento
-- **Operação:** `POST` `/api/v1/empreendimentos`
-- **Corpo Esperado (JSON):**
-  ```json
-  {
-    "nomeEmpreendimento": "Innova SC Tech",
+# 3. Execute a aplicação
+./mvnw spring-boot:run
+```
+
+> **Nota:** Sem Docker, a aplicação utiliza automaticamente o banco **H2 in-memory** como fallback. Os dados são reinicializados a cada reinício da aplicação.
+
+A API estará disponível em: **http://localhost:8080**
+
+---
+
+## 🌐 Endpoints da API
+
+Todos os endpoints estão sob o prefixo `/api/v1/empreendimentos`.
+
+### Resumo
+
+| Método | Rota | Descrição | HTTP Status |
+|---|---|---|---|
+| `POST` | `/api/v1/empreendimentos` | Criar novo empreendimento | `201 Created` |
+| `GET` | `/api/v1/empreendimentos` | Listar todos (paginado) | `200 OK` |
+| `GET` | `/api/v1/empreendimentos/{id}` | Buscar por ID | `200 OK` / `404 Not Found` |
+| `PUT` | `/api/v1/empreendimentos/{id}` | Atualizar por ID | `200 OK` / `404 Not Found` |
+| `DELETE` | `/api/v1/empreendimentos/{id}` | Excluir por ID | `204 No Content` / `404 Not Found` |
+
+### Detalhes e Exemplos
+
+#### 1️⃣ Criar Empreendimento — `POST /api/v1/empreendimentos`
+
+**Request Body (JSON):**
+
+```json
+{
+  "nomeEmpreendimento": "Innova SC Tech",
+  "nomeEmpreendedor": "Maria Souza",
+  "municipioSC": "Florianópolis",
+  "segmento": "TECNOLOGIA",
+  "contato": "(48) 99999-1111",
+  "status": "ATIVO"
+}
+```
+
+**Response — `201 Created`:**
+
+```json
+{
+  "id": 4,
+  "nomeEmpreendimento": "Innova SC Tech",
+  "nomeEmpreendedor": "Maria Souza",
+  "municipioSC": "Florianópolis",
+  "segmento": "TECNOLOGIA",
+  "contato": "(48) 99999-1111",
+  "status": "ATIVO",
+  "dataCadastro": "2026-03-13T18:00:00",
+  "dataAtualizacao": null
+}
+```
+
+> **Campos obrigatórios:** `nomeEmpreendimento`, `nomeEmpreendedor`, `municipioSC`, `segmento`, `contato`, `status`.
+>
+> **Valores válidos para `segmento`:** `TECNOLOGIA`, `COMERCIO`, `INDUSTRIA`, `SERVICOS`, `AGRONEGOCIO`
+>
+> **Valores válidos para `status`:** `ATIVO`, `INATIVO`
+
+#### 2️⃣ Listar Empreendimentos — `GET /api/v1/empreendimentos`
+
+Retorna uma lista paginada. Parâmetros opcionais de query: `page` (padrão `0`), `size` (padrão `20`), `sort`.
+
+```bash
+curl "http://localhost:8080/api/v1/empreendimentos?page=0&size=10"
+```
+
+#### 3️⃣ Buscar por ID — `GET /api/v1/empreendimentos/{id}`
+
+```bash
+curl http://localhost:8080/api/v1/empreendimentos/1
+```
+
+Retorna `200 OK` com o objeto, ou `404 Not Found` se o ID não existir.
+
+#### 4️⃣ Atualizar Empreendimento — `PUT /api/v1/empreendimentos/{id}`
+
+```bash
+curl -X PUT http://localhost:8080/api/v1/empreendimentos/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nomeEmpreendimento": "Innova SC Tech Atualizado",
     "nomeEmpreendedor": "Maria Souza",
-    "municipioSC": "Florianópolis",
+    "municipioSC": "Joinville",
     "segmento": "TECNOLOGIA",
-    "contato": "(48) 99999-1111",
-    "status": "ATIVO"
-  }
-  ```
-- **Retorno de Sucesso:** Código HTTP `201 Created` retornando os dados armazenados + Id autogerado.
+    "contato": "(47) 98888-0000",
+    "status": "INATIVO"
+  }'
+```
 
-### 2️⃣ Listar os Empreendimentos
-- **Operação:** `GET` `/api/v1/empreendimentos`
-- **Retorno de Sucesso:** Código HTTP `200 OK` englobando a lista paginada com os objetos salvos na base da gestão e suas URLs relacionadas.
+Retorna `200 OK` com o objeto atualizado e o campo `dataAtualizacao` preenchido.
 
-### 3️⃣ Recuperar e Atualizar Informações
-- **Recuperar (GET):** Requisição para `/api/v1/empreendimentos/{id}` (Trazendo status: `200 OK`).
-- **Atualizar (PUT):** Requisição para `/api/v1/empreendimentos/{id}` enviando um payload equivalente ao de criar recursos (Apenas campos editados/todos). Sucesso: `200 OK` (E o objeto resultante).
+#### 5️⃣ Excluir Empreendimento — `DELETE /api/v1/empreendimentos/{id}`
 
-### 4️⃣ Excluir Registro
-- **Operação:** `DELETE` `/api/v1/empreendimentos/{id}`
-- **Retorno de Sucesso:** A remoção trará o HTTP `204 No Content` provando total limpeza local do Id desejado. (Se o Id for inexistente trará um `404 Not Found`).
+```bash
+curl -X DELETE http://localhost:8080/api/v1/empreendimentos/1
+```
 
+Retorna `204 No Content` em caso de sucesso, ou `404 Not Found` se o ID for inexistente.
+
+---
+
+## 🛡️ Tratamento de Erros
+
+A API possui tratamento centralizado de exceções via `GlobalExceptionHandler`:
+
+| Cenário | HTTP Status | Exemplo de Resposta |
+|---|---|---|
+| Recurso não encontrado | `404 Not Found` | `{"timestamp": "...", "status": 404, "error": "Not Found", "message": "Empreendimento não encontrado para o id 99"}` |
+| Validação de campos | `400 Bad Request` | `{"timestamp": "...", "status": 400, "error": "Bad Request", "message": "Validation Failed", "details": {"nomeEmpreendimento": "O nome do empreendimento não pode estar em branco"}}` |
+
+---
+
+## 🗃️ Migrações do Banco de Dados (Flyway)
+
+O projeto utiliza **Flyway** para versionamento do schema. As migrações ficam em `src/main/resources/db/migration/`:
+
+| Migração | Descrição |
+|---|---|
+| `V1__create_table_empreendimentos.sql` | Cria a tabela `empreendimentos` com todos os campos necessários |
+| `V2__insert_seed_empreendimentos.sql` | Insere 3 registros iniciais para facilitar testes e desenvolvimento |
+
+As migrações são executadas automaticamente na inicialização da aplicação, tanto com H2 quanto com PostgreSQL.
+
+---
+
+## 📖 Documentação Interativa (Swagger / OpenAPI)
+
+Com a aplicação rodando, acesse:
+
+- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **OpenAPI JSON:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+---
+
+## 🧪 Testes Automatizados
+
+O projeto inclui **14 testes unitários** cobrindo as camadas de Controller e Service:
+
+| Arquivo | Tipo | Quantidade | Framework |
+|---|---|---|---|
+| `EmpreendimentoControllerTest` | `@WebMvcTest` | 7 testes | MockMvc + Mockito |
+| `EmpreendimentoServiceImplTest` | `@ExtendWith(MockitoExtension)` | 7 testes | JUnit 5 + Mockito |
+
+**Cenários cobertos:** criação, listagem paginada, busca por ID, atualização, exclusão, validação de campos inválidos e tratamento de recurso não encontrado.
+
+Para executar os testes:
+
+```bash
+./mvnw test
+```
+
+---
+
+## 📬 Testes com Postman
+
+O projeto inclui uma coleção Postman pronta para uso:
+
+1. Importe o arquivo `docs/sctec-ia-devs-empreendimentos-api.postman_collection.json` no Postman.
+2. A variável `base_url` já vem configurada para `http://localhost:8080`.
+3. Os 5 endpoints estão pré-configurados com payloads de exemplo.
+
+Consulte o guia completo em: [`docs/guia-uso-postman.md`](docs/guia-uso-postman.md)
+
+---
+
+## 📚 Documentação Complementar
+
+| Documento | Descrição |
+|---|---|
+| [`docs/docker-postgres.md`](docs/docker-postgres.md) | Detalhes técnicos da containerização, parametrização e Flyway |
+| [`docs/guia-uso-postman.md`](docs/guia-uso-postman.md) | Guia de importação e uso da coleção Postman |
+| [`docs/diretrizes-agentes-ia/`](docs/diretrizes-agentes-ia/) | Documento oficial do desafio e plano de implementação |
+
+---
 
 ## 🎥 Link do Vídeo Pitch
 
