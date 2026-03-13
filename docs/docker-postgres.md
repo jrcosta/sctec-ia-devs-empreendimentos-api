@@ -1,75 +1,158 @@
-# Ambiente Docker, PostgreSQL e Seed
+# Ambiente Docker, PostgreSQL e Migrações Flyway
 
-Esta documentação detalha a arquitetura do ambiente de banco de dados e as razões pelas quais o projeto transitou da dependência exclusiva do **H2 in-memory** para incluir o suporte local via **PostgreSQL** orquestrado pelo Docker.
+Documentação técnica detalhando a arquitetura de containerização, integração com PostgreSQL e estratégia de migrações adotada no projeto.
 
 ## 1. Contexto e Motivação
 
-O H2 in-memory é excelente para desenvolvimento fluído porque limpa os dados sempre que a API (Spring Boot) reinicia sem comprometer o sistema operacional host. Contudo, em cenários produtivos e testes de integração fidedignos, nós precisamos simular o comportamento de um banco de dados relacional oficial.
+O projeto suporta **dois modos de execução** de banco de dados:
 
-Para atender o nível de Senioridade deste repositório na **Etapa 6**, introduzimos o **PostgreSQL 15** atrelado diretamente à estrutura nativa dos contêineres e um Script de Injeção de Dados (Seed), eliminando atritos da máquina física do desenvolvedor.
+- **H2 in-memory (desenvolvimento local):** Banco embutido que se reinicializa a cada restart. Ideal para desenvolvimento rápido sem dependências externas.
+- **PostgreSQL 15 (via Docker):** Banco relacional completo, persistente e fiel ao ambiente de produção. Recomendado para testes de integração e demonstrações.
 
-## 2. Abordagem de Containerização
+A transição entre os modos é **automática** e transparente, sem alteração de código — controlada exclusivamente por variáveis de ambiente.
 
-Foram criados os seguintes pilares através do Docker:
+## 2. Dockerfile (Multi-Stage Build)
 
-1. **Dockerfile Multi-Stage**: 
-   - A fase de **Build** utiliza uma imagem robusta com o ecossistema Maven embutido (`eclipse-temurin:17-jdk-alpine`) para ler o código-fonte, resolver dependências off-line no `.mvn` e exportar o pacote compilado desconsiderando os testes locais.
-   - A fase de **Run** seleciona um SO leve voltado à otimização e isolamento `eclipse-temurin:17-jre-alpine`, arrasta o arquivo `.jar` gerado na etapa anterior e injeta o `ENTRYPOINT` executando o serviço na porta 8080. 
-   - Essa manobra **dispensa** o Dev de abrir sua IDE e instalar o Maven globalmente.
+O `Dockerfile` na raiz do projeto utiliza **duas etapas** para otimizar tamanho e segurança da imagem final:
 
-2. **Docker Compose**: 
-   - Arquivo utilitário `docker-compose.yml` que sobe duas instâncias vinculadas pela ponte interna de rede: a "api" e o "db" (Postgres 15).
-   - Ele cria volumes interativos garantindo a sustentação e blindagem persistente (`pgdata`) do que for testado.
+### Etapa 1 — Build (Compilação)
+- **Imagem:** `eclipse-temurin:17-jdk-alpine`
+- Copia o código-fonte e wrapper Maven
+- Resolve dependências offline (`dependency:go-offline`)
+- Gera o pacote `.jar` sem executar testes (`-DskipTests`)
 
-## 3. Parametrização Flexível (Fallback)
+### Etapa 2 — Runtime (Execução)
+- **Imagem:** `eclipse-temurin:17-jre-alpine` (leve, somente JRE)
+- Copia apenas o `.jar` compilado da etapa anterior
+- Expõe a porta `8080` e executa via `java -jar`
 
-Para que a implementação do Docker **não quebrasse ou travasse** a experiência padrão do Spring Boot na máquina (rodando no famoso botão de `Play` da IDE), adotamos um conceito flexível no `src/main/resources/application.properties`:
+> **Vantagem:** O desenvolvedor não precisa instalar Java ou Maven na máquina. Basta ter o Docker.
+
+## 3. Docker Compose
+
+O arquivo `docker-compose.yml` orquestra dois serviços interligados:
+
+### Serviço `db` (PostgreSQL)
+```yaml
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: sctec_db
+    environment:
+      POSTGRES_USER: sctec_user
+      POSTGRES_PASSWORD: sctec_password
+      POSTGRES_DB: sctec_empreendimentos
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+```
+
+### Serviço `api` (Spring Boot)
+```yaml
+  api:
+    build: .
+    container_name: sctec_api
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=jdbc:postgresql://db:5432/sctec_empreendimentos
+      - DB_USERNAME=sctec_user
+      - DB_PASSWORD=sctec_password
+      - DB_DRIVER=org.postgresql.Driver
+      - DB_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+    depends_on:
+      - db
+```
+
+**Pontos-chave:**
+- O `depends_on` garante que o banco suba antes da API.
+- O volume `pgdata` persiste os dados entre reinicializações dos containers.
+- A rede interna do Docker permite que a API acesse o banco pelo hostname `db`.
+
+## 4. Parametrização Flexível (Fallback H2 ↔ PostgreSQL)
+
+A configuração em `application.properties` usa a notação `${VAR:DEFAULT}` do Spring:
 
 ```properties
-spring.datasource.url=${DB_URL:jdbc:h2:mem:testdb}
+spring.datasource.url=${DB_URL:jdbc:h2:mem:sctec_empreendimentos;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH}
 spring.datasource.username=${DB_USERNAME:sa}
 spring.datasource.password=${DB_PASSWORD:}
 spring.datasource.driver-class-name=${DB_DRIVER:org.h2.Driver}
 spring.jpa.database-platform=${DB_DIALECT:org.hibernate.dialect.H2Dialect}
+spring.jpa.hibernate.ddl-auto=validate
 ```
 
-A diretiva `${VAR:DEFAULT}` informa ao Spring:
-- **No Docker**: Injetaremos as URL e Senhas reais do PostgreSQL criadas no "services" do Compose via variáveis de ambiente. A aplicação usa e modela as tabelas no Postgres, descartando o H2.
-- **No PC do Dev**: Como não há docker rodando, o Spring lê o `DEFAULT` contido depois do dois-pontos e injeta sozinho novamente o H2 Database na memória RAM de desenvolvimento contínua. Sem estresses.
+| Cenário | Comportamento |
+|---|---|
+| **Com Docker (variáveis definidas)** | Usa PostgreSQL com as credenciais injetadas pelo Compose |
+| **Sem Docker (variáveis ausentes)** | Usa H2 in-memory com os valores padrão após o `:` |
 
-## 4. Flyway Migrations e Seeding
+> O modo do H2 está configurado como `MODE=PostgreSQL` para maior compatibilidade entre ambientes.
 
-Abandonamos a perigosa propriedade geradora nativa do Hibernate (`ddl-auto=update`) e o script solto de `data.sql`. A arquitetura atual usufrui de **Migrations Formais** orquestradas pelo **Flyway**, provendo versionamento profissional na pasta `src/main/resources/db/migration/`:
+## 5. Flyway — Migrações Versionadas
 
-1. `V1__create_table_empreendimentos.sql`: Prepara e constrói a tabela com as primárias, índices e campos pre-definidos no banco Postgres ou H2 em caso de ramificação local.
-2. `V2__insert_seed_empreendimentos.sql`: Executado após a criação, preenche imediatamente as linhas das tabelas com 3 registros fantasiados propícios para debug rápido na UI.
+O projeto **não utiliza** `ddl-auto=update` do Hibernate para criação de schema. Em vez disso, adota **migrações formais** gerenciadas pelo Flyway, localizadas em `src/main/resources/db/migration/`:
 
-> **Atenção**: Esta estratégia de V1 e V2 executa infalível independente do repositório final de banco de dados e impede sobrescritas de metadados em re-starts frequentes. 
+| Arquivo | Descrição |
+|---|---|
+| `V1__create_table_empreendimentos.sql` | Cria a tabela `empreendimentos` com todos os campos, tipos e constraints |
+| `V2__insert_seed_empreendimentos.sql` | Insere 3 registros iniciais (seed) para facilitar desenvolvimento e validação |
 
-## 5. Como Executar?
+**Características:**
+- Executadas automaticamente na inicialização (tanto H2 quanto PostgreSQL)
+- Idempotentes por design — o Flyway rastreia quais já foram aplicadas na tabela `flyway_schema_history`
+- O `ddl-auto=validate` garante que o Hibernate confira se o schema está alinhado com as entidades
 
-Garanta o Docker Engine inicializado em segundo plano no seu SO, entre na raiz pelo seu console preferido, e insira os comandos:
+### Schema da Tabela `empreendimentos`
+
+```sql
+CREATE TABLE empreendimentos (
+    id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    nome_empreendimento VARCHAR(255) NOT NULL,
+    nome_empreendedor VARCHAR(255) NOT NULL,
+    municipioSC VARCHAR(255) NOT NULL,
+    segmento VARCHAR(50) NOT NULL,
+    contato VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    data_cadastro TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Dados de Seed
+
+| nome_empreendimento | nome_empreendedor | municipioSC | segmento | contato | status |
+|---|---|---|---|---|---|
+| Innova SC | Maria Souza | Florianópolis | TECNOLOGIA | (48) 99999-1111 | ATIVO |
+| AgroSC Global | José Alves | Chapecó | AGRONEGOCIO | (49) 98888-2222 | ATIVO |
+| Sul Textil | Ana Clara | Blumenau | INDUSTRIA | (47) 97777-3333 | INATIVO |
+
+## 6. Comandos de Execução
 
 ```bash
-# Apague projetos residuais da porta 8080, e construa a imagem do zero, subindo as instâncias sem travar o console (-d):
+# Construir e subir tudo em background
 docker compose up --build -d
 
-# Caso queira validar os logs em tempo real que saem do Spring interagindo com o banco:
+# Acompanhar logs da API em tempo real
 docker compose logs -f api
 
-# Para encerrar o expediente sem deletar o banco:
+# Parar containers (preserva volume do banco)
 docker compose stop
 
-# Para destruir tudo com força bruta após os testes:
+# Destruir containers e volumes (limpa tudo)
 docker compose down -v
 ```
 
-## 6. Validando os Dados no Navegador
+## 7. Validação Rápida
 
-Como o *Seed* injeta 3 empreendimentos assim que o banco de dados liga na arquitetura, você não precisa fazer nenhum POST manual ou usar ferramentas pesadas como Insomnia para checar se a API está de pé e conectada ao Postgres com sucesso.
+Após subir os containers, acesse no navegador ou terminal:
 
-Basta abrir o seu navegador preferido (Chrome, Edge, Firefox) e acessar (ou clicar) nesta URL:
+```bash
+# Listar empreendimentos (3 registros do seed)
+curl http://localhost:8080/api/v1/empreendimentos
 
-👉 **[http://localhost:8080/api/v1/empreendimentos](http://localhost:8080/api/v1/empreendimentos)**
+# Swagger UI (documentação interativa)
+# http://localhost:8080/swagger-ui.html
+```
 
-A API responderá com os dados em JSON limpo listando todos os empreendimentos paginados recém-criados.
+Se os 3 registros do seed aparecerem na resposta JSON, a aplicação está corretamente conectada ao PostgreSQL e as migrações foram executadas com sucesso.
