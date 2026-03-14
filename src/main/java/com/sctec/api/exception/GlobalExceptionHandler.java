@@ -1,7 +1,9 @@
 package com.sctec.api.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -48,6 +50,33 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+
+        // Detecta erro de deserialização de enum inválido
+        if (ex.getCause() instanceof InvalidFormatException invalidFormatEx
+                && invalidFormatEx.getTargetType() != null
+                && invalidFormatEx.getTargetType().isEnum()) {
+
+            String fieldName = invalidFormatEx.getPath().isEmpty()
+                    ? "desconhecido"
+                    : invalidFormatEx.getPath().get(0).getFieldName();
+            String invalidValue = String.valueOf(invalidFormatEx.getValue());
+
+            body.put("message", String.format(
+                    "Valor inválido '%s' para o campo '%s'. Consulte a documentação da API para os valores aceitos.",
+                    invalidValue, fieldName));
+        } else {
+            body.put("message", "O corpo da requisição contém um formato inválido ou não pôde ser lido.");
+        }
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleAllUncaughtException(Exception ex) {
         logger.error("An unexpected error occurred", ex);
@@ -56,7 +85,7 @@ public class GlobalExceptionHandler {
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         body.put("error", "Internal Server Error");
         body.put("message", "An unexpected error occurred");
-        // Do not include stack traces or internal details
+        // Não incluir stack traces ou detalhes internos
 
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }

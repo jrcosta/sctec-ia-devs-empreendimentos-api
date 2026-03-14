@@ -154,4 +154,52 @@ class EmpreendimentoControllerTest {
 
         verify(service, times(1)).delete(1L);
     }
+
+    @Test
+    void create_WhenInvalidSegmento_ShouldReturnBadRequestWithMessage() throws Exception {
+        String jsonComSegmentoInvalido = """
+                {
+                  "nomeEmpreendimento": "Empresa Teste",
+                  "nomeEmpreendedor": "João",
+                  "municipioSC": "Florianópolis",
+                  "segmento": "NADA",
+                  "contato": "joao@teste.com",
+                  "status": "ATIVO"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/empreendimentos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonComSegmentoInvalido))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value(
+                        "Valor inválido 'NADA' para o campo 'segmento'. Consulte a documentação da API para os valores aceitos."));
+
+        verify(service, never()).create(any(EmpreendimentoRequestDTO.class));
+    }
+
+    @Test
+    void create_WhenInvalidStatus_ShouldReturnBadRequestWithMessage() throws Exception {
+        String jsonComStatusInvalido = """
+                {
+                  "nomeEmpreendimento": "Empresa Teste",
+                  "nomeEmpreendedor": "João",
+                  "municipioSC": "Florianópolis",
+                  "segmento": "TECNOLOGIA",
+                  "contato": "joao@teste.com",
+                  "status": "INVALIDO"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/empreendimentos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonComStatusInvalido))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value(
+                        "Valor inválido 'INVALIDO' para o campo 'status'. Consulte a documentação da API para os valores aceitos."));
+
+        verify(service, never()).create(any(EmpreendimentoRequestDTO.class));
+    }
 }
