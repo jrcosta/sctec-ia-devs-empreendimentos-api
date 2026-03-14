@@ -370,4 +370,4 @@ Consulte o guia completo em: [`docs/guia-uso-postman.md`](docs/guia-uso-postman.
 
 Segue o link do vídeo final (de 3 minutos) sobre a apresentação oficial entregue:
 
-> [Assista ao vídeo pitch do Desafio SCTEC Backend (YouTube/Vimeo)]()
+> [Assista ao vídeo pitch do Desafio SCTEC Backend (YouTube)](https://youtu.be/6hj2BsJ2AUg?si=EpLtpG-kFuZNnSkR)
