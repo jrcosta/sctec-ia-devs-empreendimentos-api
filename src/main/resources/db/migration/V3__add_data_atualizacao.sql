@@ -1,1 +1,0 @@
-ALTER TABLE empreendimentos ADD COLUMN data_atualizacao TIMESTAMP WITHOUT TIME ZONE;
